@@ -63,7 +63,7 @@ export default function LockScreen() {
               key={i}
               animate={{ scale: pin.length > i ? 1.2 : 1 }}
               className={`w-3 h-3 rounded-full transition-all ${
-                pin.length > i ? 'bg-[var(--color-primary)]' : 'bg-white/20'
+                pin.length > i ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-primary)]/15'
               }`}
             />
           ))}

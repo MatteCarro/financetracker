@@ -44,21 +44,69 @@ export default function DashboardPage() {
   const mascotteName = settings?.mascotteName ?? 'Soldino'
 
   const pieData = catSpend.slice(0, 5).map((c) => ({ name: c.nome, value: c.speso, color: c.colore, icona: c.icona }))
+  const totalSpent = catSpend.reduce((acc, c) => acc + c.speso, 0)
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
-      {/* Mascot greeting */}
+      {/* Mascot hero — big, cute & playful */}
       <motion.div
         variants={FADE_UP}
         initial="initial"
         animate="animate"
-        className="glass !p-4 flex items-center gap-4"
+        className="relative flex flex-col items-center pt-2 pb-1"
       >
-        <MascotSVG mood={mood} size={72} />
-        <div className="flex-1">
-          <p className="text-xs text-[var(--color-text-muted)] mb-0.5">{mascotteName} dice:</p>
-          <p className="text-sm font-medium text-[var(--color-text-primary)] leading-snug">{message}</p>
-        </div>
+        {/* Soft glow behind mascot */}
+        <div
+          className="absolute top-0 w-56 h-56 rounded-full blur-3xl opacity-55"
+          style={{
+            background:
+              mood === 'alert' || mood === 'worried'
+                ? 'radial-gradient(circle, rgba(248,113,113,0.4), transparent 65%)'
+                : 'radial-gradient(circle, rgba(124,108,240,0.35), rgba(52,211,153,0.15), transparent 65%)',
+          }}
+        />
+        {/* Decorative sparkles */}
+        <motion.span
+          className="absolute text-lg"
+          style={{ top: '10px', left: 'calc(50% - 90px)' }}
+          animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.1, 0.8], rotate: [0, 15, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, delay: 0 }}
+        >✨</motion.span>
+        <motion.span
+          className="absolute text-sm"
+          style={{ top: '30px', right: 'calc(50% - 85px)' }}
+          animate={{ opacity: [0.3, 0.9, 0.3], scale: [0.7, 1, 0.7] }}
+          transition={{ duration: 3, repeat: Infinity, delay: 0.8 }}
+        >💰</motion.span>
+        <motion.span
+          className="absolute text-xs"
+          style={{ top: '5px', right: 'calc(50% - 60px)' }}
+          animate={{ opacity: [0.5, 1, 0.5], y: [0, -5, 0] }}
+          transition={{ duration: 2, repeat: Infinity, delay: 1.2 }}
+        >⭐</motion.span>
+
+        <MascotSVG mood={mood} size={180} />
+
+        {/* Speech bubble — overlapping below */}
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 260, damping: 20 }}
+          className="glass relative -mt-4 px-5 py-3 max-w-[19rem] text-center z-10"
+          style={{ borderRadius: 20 }}
+        >
+          {/* Bubble tail */}
+          <div
+            className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 bg-[var(--color-surface-1)]"
+            style={{ borderLeft: '1px solid rgba(139,124,246,0.10)', borderTop: '1px solid rgba(139,124,246,0.10)' }}
+          />
+          <p className="text-xs font-bold text-[var(--color-primary)] mb-0.5 flex items-center justify-center gap-1">
+            🐷 {mascotteName}
+          </p>
+          <p className="text-sm font-medium text-[var(--color-text-primary)] leading-snug">
+            {message}
+          </p>
+        </motion.div>
       </motion.div>
 
       {/* Main balance */}
@@ -137,11 +185,69 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Category pie */}
+      {/* Category breakdown — cute cards */}
+      {catSpend.length > 0 && (
+        <motion.div variants={FADE_UP} initial="initial" animate="animate">
+          <Card className="!p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-[var(--color-text-secondary)] flex items-center gap-1.5">
+                🏷️ Spese per categoria
+              </p>
+              <span className="text-xs text-[var(--color-text-muted)] font-numeric">
+                Totale: {formatCurrency(totalSpent)}
+              </span>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {catSpend.slice(0, 6).map((c, i) => (
+                <motion.div
+                  key={c.categoriaId}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.05 * i }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0"
+                      style={{ backgroundColor: c.colore + '25' }}
+                    >
+                      {c.icona}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-[var(--color-text-primary)] truncate">{c.nome}</span>
+                        <span className="text-sm font-bold font-numeric text-[var(--color-text-primary)] flex-shrink-0 ml-2">
+                          {formatCurrency(c.speso)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ProgressBar
+                          value={c.speso}
+                          max={c.budget ?? catSpend[0].speso * 1.2}
+                          color={c.colore}
+                          height={5}
+                        />
+                        {c.budget && (
+                          <span className="text-[10px] text-[var(--color-text-muted)] font-numeric flex-shrink-0">
+                            / {formatCurrency(c.budget)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Category pie chart */}
       {pieData.length > 0 && (
         <motion.div variants={FADE_UP} initial="initial" animate="animate">
           <Card className="!p-4">
-            <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3">Spese per categoria</p>
+            <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 flex items-center gap-1.5">
+              📊 Distribuzione spese
+            </p>
             <div className="flex gap-4 items-center">
               <ResponsiveContainer width={120} height={120}>
                 <PieChart>
@@ -149,7 +255,9 @@ export default function DashboardPage() {
                     {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}
+                    contentStyle={{ background: '#ffffff', border: '1px solid rgba(139,124,246,0.15)', borderRadius: 16, boxShadow: '0 4px 16px rgba(139,124,246,0.12)' }}
+                    labelStyle={{ color: '#8b84a3' }}
+                    itemStyle={{ color: '#3b3354' }}
                     formatter={(v) => formatCurrency(v as number)}
                   />
                 </PieChart>
@@ -158,7 +266,7 @@ export default function DashboardPage() {
                 {pieData.map((d) => (
                   <div key={d.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
                       <span className="text-xs text-[var(--color-text-secondary)]">{d.icona} {d.name}</span>
                     </div>
                     <span className="text-xs font-numeric font-medium text-[var(--color-text-primary)]">{formatCurrency(d.value)}</span>

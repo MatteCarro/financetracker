@@ -38,6 +38,13 @@ export class FinanceDB extends Dexie {
       savingsGoals: 'id, scadenza, createdAt',
       settings: 'id',
     })
+    this.version(2).stores({
+      categories: 'id, nome, tipo, createdAt',
+    }).upgrade((tx) => {
+      return tx.table('categories').toCollection().modify((cat) => {
+        if (!cat.tipo) cat.tipo = 'uscita'
+      })
+    })
   }
 }
 

@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import ProgressBar from '@/components/ui/ProgressBar'
 
-const GOAL_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4']
+const GOAL_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#f0b68a','#06b6d4']
 const GOAL_ICONS = ['🏠','✈️','🚗','🎓','💍','🏖️','💻','🏋️','🐶','🌟']
 
 function GoalForm({ onSave, onClose, initial }: {

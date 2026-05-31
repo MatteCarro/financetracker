@@ -84,7 +84,7 @@ export default function PinSetup() {
               className={`w-3 h-3 rounded-full transition-colors ${
                 current.length > i
                   ? 'bg-[var(--color-primary)]'
-                  : 'bg-white/20'
+                  : 'bg-[var(--color-primary)]/15'
               }`}
             />
           ))}

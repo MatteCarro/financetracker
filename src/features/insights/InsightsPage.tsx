@@ -37,7 +37,7 @@ export default function InsightsPage() {
     risparmio: '#10b981',
     avviso: '#f59e0b',
     obiettivo: '#6366f1',
-    celebrazione: '#ec4899',
+    celebrazione: '#f59e0b',
   }
 
   return (
@@ -69,17 +69,18 @@ export default function InsightsPage() {
         <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3">Ultimi 6 mesi</p>
         <ResponsiveContainer width="100%" height={160}>
           <LineChart data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
-            <YAxis tick={{ fill: '#64748b', fontSize: 10 }} width={45} tickFormatter={(v) => `€${v}`} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,124,246,0.12)" />
+            <XAxis dataKey="name" tick={{ fill: '#8b84a3', fontSize: 11 }} />
+            <YAxis tick={{ fill: '#8b84a3', fontSize: 10 }} width={45} tickFormatter={(v) => `€${v}`} />
             <Tooltip
-              contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }}
-              labelStyle={{ color: '#94a3b8' }}
+              contentStyle={{ background: '#ffffff', border: '1px solid rgba(139,124,246,0.2)', borderRadius: 12, boxShadow: '0 4px 16px rgba(139,124,246,0.15)' }}
+              labelStyle={{ color: '#8b84a3' }}
+              itemStyle={{ color: '#3b3354' }}
               formatter={(v) => formatCurrency(v as number)}
             />
-            <Line type="monotone" dataKey="entrate" stroke="#10b981" strokeWidth={2} dot={false} name="Entrate" />
-            <Line type="monotone" dataKey="uscite" stroke="#ef4444" strokeWidth={2} dot={false} name="Uscite" />
-            <Line type="monotone" dataKey="risparmio" stroke="#6366f1" strokeWidth={2} dot={false} name="Risparmio" />
+            <Line type="monotone" dataKey="entrate" stroke="#34d399" strokeWidth={3} dot={false} name="Entrate" />
+            <Line type="monotone" dataKey="uscite" stroke="#fb7185" strokeWidth={3} dot={false} name="Uscite" />
+            <Line type="monotone" dataKey="risparmio" stroke="#8b7cf6" strokeWidth={3} dot={false} name="Risparmio" />
           </LineChart>
         </ResponsiveContainer>
         <div className="flex gap-4 mt-2 justify-center">

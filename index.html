@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it" data-theme="dark">
+<html lang="it" data-theme="light">
   <head>
     <meta charset="UTF-8" />
 
@@ -12,11 +12,10 @@
     <!-- ── PWA / iOS meta ── -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Finance" />
     <meta name="application-name" content="FinanceTracker" />
-    <meta name="theme-color" content="#060810" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f0f4ff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#fef6fb" />
 
     <!-- ── Description / SEO ── -->
     <meta
@@ -78,11 +77,11 @@
       ;(function () {
         try {
           var stored = localStorage.getItem('ft-theme')
-          // Default to dark; only switch to light if the user has explicitly chosen it
-          var theme = stored === 'light' ? 'light' : 'dark'
+          // Default to the cute light theme; only switch to dark if explicitly chosen
+          var theme = stored === 'dark' ? 'dark' : 'light'
           document.documentElement.setAttribute('data-theme', theme)
         } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'dark')
+          document.documentElement.setAttribute('data-theme', 'light')
         }
       })()
     </script>

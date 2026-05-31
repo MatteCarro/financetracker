@@ -19,7 +19,7 @@ const variantClasses: Record<Variant, string> = {
   primary: 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]',
   secondary: 'glass glass-hover text-[var(--color-text-primary)]',
   danger: 'bg-[var(--color-danger)]/20 text-[var(--color-danger)] border border-[var(--color-danger)]/30',
-  ghost: 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/05',
+  ghost: 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-primary)]/5',
 }
 
 const sizeClasses: Record<Size, string> = {

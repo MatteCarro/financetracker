@@ -19,7 +19,7 @@ const ACCOUNT_ICONS: Record<AccountType, string> = {
   altro: '📊',
 }
 
-const CARD_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#8b5cf6']
+const CARD_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#f0b68a', '#06b6d4', '#8b5cf6']
 
 // ── Account form ──
 function AccountForm({ onSave, onClose, initial }: {

@@ -23,11 +23,25 @@ function TransactionForm({ onSave, onClose }: {
   const [tipo, setTipo] = useState<TransactionType>('uscita')
   const [importo, setImporto] = useState('')
   const [descrizione, setDescrizione] = useState('')
-  const [categoriaId, setCategoriaId] = useState(categories[0]?.id ?? '')
+  const [categoriaId, setCategoriaId] = useState('')
   const [metodo, setMetodo] = useState<PaymentMethod>('conto')
   const [fonteId, setFonteId] = useState('')
   const [data, setData] = useState(new Date().toISOString().split('T')[0])
   const [saving, setSaving] = useState(false)
+
+  // Filter categories by transaction type
+  const filteredCats = categories.filter(
+    (c) => c.tipo === tipo || c.tipo === 'entrambi'
+  )
+
+  // Reset category when tipo changes
+  const handleTipoChange = (t: TransactionType) => {
+    setTipo(t)
+    const newFiltered = categories.filter((c) => c.tipo === t || c.tipo === 'entrambi')
+    if (newFiltered.length > 0 && !newFiltered.some((c) => c.id === categoriaId)) {
+      setCategoriaId(newFiltered[0].id)
+    }
+  }
 
   const fonti = metodo === 'conto' ? accounts : cards
 
@@ -38,7 +52,7 @@ function TransactionForm({ onSave, onClose }: {
       id: uuid(),
       importo: parseFloat(importo.replace(',', '.')) || 0,
       tipo,
-      categoriaId: categoriaId || categories[0]?.id,
+      categoriaId: categoriaId || filteredCats[0]?.id,
       data: new Date(data),
       descrizione,
       fonteId,
@@ -54,7 +68,7 @@ function TransactionForm({ onSave, onClose }: {
       {/* Tipo */}
       <div className="grid grid-cols-2 gap-2">
         {(['uscita', 'entrata'] as TransactionType[]).map((t) => (
-          <button key={t} onClick={() => setTipo(t)}
+          <button key={t} onClick={() => handleTipoChange(t)}
             className={`py-3 rounded-xl text-sm font-semibold glass glass-hover transition-all ${
               tipo === t
                 ? t === 'entrata' ? 'text-[var(--color-accent)] border-[var(--color-accent)]/40' : 'text-[var(--color-danger)] border-[var(--color-danger)]/40'
@@ -69,11 +83,13 @@ function TransactionForm({ onSave, onClose }: {
       <Input label="Descrizione" value={descrizione} onChange={(e) => setDescrizione(e.target.value)} placeholder="es. Supermercato" />
       <Input label="Data" value={data} onChange={(e) => setData(e.target.value)} type="date" />
 
-      {/* Categoria */}
+      {/* Categoria — filtrate per tipo */}
       <div>
-        <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-2 block">Categoria</label>
+        <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-2 block">
+          Categoria {tipo === 'entrata' ? '(entrate)' : '(uscite)'}
+        </label>
         <div className="flex flex-wrap gap-2">
-          {categories.map((c) => (
+          {filteredCats.map((c) => (
             <button key={c.id} onClick={() => setCategoriaId(c.id)}
               className={`px-3 py-1.5 rounded-xl text-sm glass glass-hover transition-all ${categoriaId === c.id ? 'border-[var(--color-primary)]/60 text-[var(--color-primary-light)]' : 'text-[var(--color-text-muted)]'}`}>
               {c.icona} {c.nome}

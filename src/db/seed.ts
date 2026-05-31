@@ -3,18 +3,26 @@ import type { Category, Settings } from '@/lib/types'
 import { db } from './schema'
 
 const DEFAULT_CATEGORIES: Omit<Category, 'createdAt' | 'updatedAt'>[] = [
-  { id: uuid(), nome: 'Casa', icona: '🏠', colore: '#6366f1' },
-  { id: uuid(), nome: 'Spesa alimentare', icona: '🛒', colore: '#10b981' },
-  { id: uuid(), nome: 'Trasporti', icona: '🚗', colore: '#f59e0b' },
-  { id: uuid(), nome: 'Bollette', icona: '⚡', colore: '#ef4444' },
-  { id: uuid(), nome: 'Salute', icona: '❤️‍🩹', colore: '#ec4899' },
-  { id: uuid(), nome: 'Svago', icona: '🎮', colore: '#8b5cf6' },
-  { id: uuid(), nome: 'Ristoranti', icona: '🍽️', colore: '#f97316' },
-  { id: uuid(), nome: 'Abbigliamento', icona: '👕', colore: '#06b6d4' },
-  { id: uuid(), nome: 'Risparmio', icona: '🐷', colore: '#22c55e' },
-  { id: uuid(), nome: 'Abbonamenti', icona: '📱', colore: '#a855f7' },
-  { id: uuid(), nome: 'Istruzione', icona: '📚', colore: '#3b82f6' },
-  { id: uuid(), nome: 'Altro', icona: '📌', colore: '#64748b' },
+  // Uscite
+  { id: uuid(), nome: 'Casa', icona: '🏠', colore: '#6366f1', tipo: 'uscita' },
+  { id: uuid(), nome: 'Spesa alimentare', icona: '🛒', colore: '#10b981', tipo: 'uscita' },
+  { id: uuid(), nome: 'Trasporti', icona: '🚗', colore: '#f59e0b', tipo: 'uscita' },
+  { id: uuid(), nome: 'Benzina', icona: '⛽', colore: '#fb923c', tipo: 'uscita' },
+  { id: uuid(), nome: 'Bollette', icona: '⚡', colore: '#ef4444', tipo: 'uscita' },
+  { id: uuid(), nome: 'Salute', icona: '❤️‍🩹', colore: '#e87461', tipo: 'uscita' },
+  { id: uuid(), nome: 'Svago', icona: '🎮', colore: '#8b5cf6', tipo: 'uscita' },
+  { id: uuid(), nome: 'Ristoranti', icona: '🍽️', colore: '#f97316', tipo: 'uscita' },
+  { id: uuid(), nome: 'Abbigliamento', icona: '👕', colore: '#06b6d4', tipo: 'uscita' },
+  { id: uuid(), nome: 'Abbonamenti', icona: '📱', colore: '#a855f7', tipo: 'uscita' },
+  { id: uuid(), nome: 'Istruzione', icona: '📚', colore: '#3b82f6', tipo: 'uscita' },
+  { id: uuid(), nome: 'Altro', icona: '📌', colore: '#64748b', tipo: 'entrambi' },
+  // Entrate
+  { id: uuid(), nome: 'Stipendio', icona: '💼', colore: '#10b981', tipo: 'entrata' },
+  { id: uuid(), nome: 'Freelance / Extra', icona: '💻', colore: '#6366f1', tipo: 'entrata' },
+  { id: uuid(), nome: 'Investimenti', icona: '📈', colore: '#f59e0b', tipo: 'entrata' },
+  { id: uuid(), nome: 'Rimborsi', icona: '🔄', colore: '#06b6d4', tipo: 'entrata' },
+  { id: uuid(), nome: 'Regali ricevuti', icona: '🎁', colore: '#8b5cf6', tipo: 'entrata' },
+  { id: uuid(), nome: 'Risparmio', icona: '🐷', colore: '#22c55e', tipo: 'entrambi' },
 ]
 
 const DEFAULT_SETTINGS: Settings = {
@@ -22,7 +30,7 @@ const DEFAULT_SETTINGS: Settings = {
   lockTimeoutMinutes: 5,
   notificheAbilitate: false,
   valuta: 'EUR',
-  tema: 'dark',
+  tema: 'light',
   mascotteName: 'Soldino',
   biometricEnabled: false,
   createdAt: new Date(),

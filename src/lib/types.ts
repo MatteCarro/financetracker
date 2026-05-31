@@ -32,11 +32,14 @@ export interface CreditCard {
   updatedAt: Date
 }
 
+export type CategoryType = 'uscita' | 'entrata' | 'entrambi'
+
 export interface Category {
   id: string
   nome: string
   icona: string
   colore: string
+  tipo: CategoryType
   budgetMensile?: number
   createdAt: Date
   updatedAt: Date

@@ -23,8 +23,8 @@ export default function ProgressBar({ value, max = 100, color, height = 6, showL
   return (
     <div className={`w-full ${className}`}>
       <div
-        className="w-full rounded-full overflow-hidden bg-white/10"
-        style={{ height }}
+        className="w-full rounded-full overflow-hidden"
+        style={{ height, backgroundColor: 'rgba(139, 124, 246, 0.10)' }}
         role="progressbar"
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}

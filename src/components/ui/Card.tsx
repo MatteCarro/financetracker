@@ -11,7 +11,7 @@ interface Props {
 
 export default function Card({ children, className = '', onClick, glow, subtle }: Props) {
   const base = subtle ? 'glass-subtle' : 'glass'
-  const glowStyle = glow ? { boxShadow: '0 0 40px rgba(99 102 241 / 0.2)' } : {}
+  const glowStyle = glow ? { boxShadow: '0 0 40px rgba(124 108 240 / 0.18), 0 0 80px rgba(52 211 153 / 0.08)' } : {}
 
   if (onClick) {
     return (

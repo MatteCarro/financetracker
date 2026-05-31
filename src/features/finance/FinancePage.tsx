@@ -2,16 +2,18 @@ import { useState, lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 
 const AccountsPage = lazy(() => import('@/features/accounts/AccountsPage'))
+const CategoriesPage = lazy(() => import('@/features/categories/CategoriesPage'))
 const SubscriptionsPage = lazy(() => import('@/features/subscriptions/SubscriptionsPage'))
 const InstallmentsPage = lazy(() => import('@/features/installments/InstallmentsPage'))
 const DebtsPage = lazy(() => import('@/features/debts/DebtsPage'))
 const IncomePage = lazy(() => import('@/features/income/IncomePage'))
 const SavingsGoalsPage = lazy(() => import('@/features/goals/SavingsGoalsPage'))
 
-type SubTab = 'conti' | 'abbonamenti' | 'rate' | 'debiti' | 'entrate' | 'obiettivi'
+type SubTab = 'conti' | 'categorie' | 'abbonamenti' | 'rate' | 'debiti' | 'entrate' | 'obiettivi'
 
 const SUB_TABS: { id: SubTab; label: string; icon: string }[] = [
   { id: 'conti', label: 'Conti', icon: '🏦' },
+  { id: 'categorie', label: 'Categorie', icon: '🏷️' },
   { id: 'abbonamenti', label: 'Abbonamenti', icon: '📱' },
   { id: 'rate', label: 'Rate', icon: '📋' },
   { id: 'debiti', label: 'Debiti', icon: '💸' },
@@ -33,7 +35,7 @@ export default function FinancePage() {
   return (
     <div className="flex flex-col">
       {/* Sub-tab pills — horizontal scroll */}
-      <div className="sticky top-0 z-10 pt-4 pb-2 px-4" style={{ background: 'linear-gradient(to bottom, #060810 70%, transparent)' }}>
+      <div className="sticky top-0 z-10 pt-4 pb-2 px-4" style={{ background: 'linear-gradient(to bottom, var(--color-surface-0) 70%, transparent)' }}>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1"
              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {SUB_TABS.map(t => (
@@ -62,6 +64,7 @@ export default function FinancePage() {
       <div className="px-4 py-2 pb-4">
         <Suspense fallback={<TabFallback />}>
           {sub === 'conti' && <AccountsPage />}
+          {sub === 'categorie' && <CategoriesPage />}
           {sub === 'abbonamenti' && <SubscriptionsPage />}
           {sub === 'rate' && <InstallmentsPage />}
           {sub === 'debiti' && <DebtsPage />}
