@@ -12,7 +12,7 @@ import type {
   UpcomingItem,
   Category,
 } from './types'
-import { currentMonthRange, daysUntil } from './dates'
+import { currentMonthRange } from './dates'
 import { startOfMonth, endOfMonth, isBefore, isAfter } from 'date-fns'
 import { v4 as uuid } from 'uuid'
 

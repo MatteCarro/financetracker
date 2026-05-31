@@ -123,7 +123,6 @@ export default function InstallmentsPage() {
         <AnimatePresence>
           {installments.map(inst => {
             const paid = inst.numeroRate - inst.rateResidue
-            const pct = (paid / inst.numeroRate) * 100
             const residuo = inst.rateResidue * inst.rataMensile
             const done = inst.rateResidue === 0
             return (

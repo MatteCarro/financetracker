@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { db } from '@/db/schema'
 import type { Debt } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
-import { formatDate, monthsUntil } from '@/lib/dates'
+import { formatDate } from '@/lib/dates'
 import Card from '@/components/ui/Card'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
@@ -92,7 +92,6 @@ export default function DebtsPage() {
         <AnimatePresence>
           {debts.map(debt => {
             const paid = debt.importoTotale - debt.importoResiduo
-            const pct = debt.importoTotale > 0 ? (paid / debt.importoTotale) * 100 : 0
             const mesiRimasti = debt.rataMensile && debt.rataMensile > 0
               ? Math.ceil(debt.importoResiduo / debt.rataMensile) : null
 

@@ -90,7 +90,7 @@ function ImportBackup() {
 
 export default function SettingsPage() {
   const { settings, update } = useSettingsStore()
-  const { lock, setupPin } = useAuthStore()
+  const { lock } = useAuthStore()
   const dbSettings = useLiveQuery(() => db.settings.get('singleton'), [])
 
   const [showChangePIN, setShowChangePIN] = useState(false)

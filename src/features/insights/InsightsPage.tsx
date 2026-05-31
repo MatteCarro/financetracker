@@ -6,7 +6,7 @@ import { generateInsights, categorySpend, monthlyStats } from '@/lib/finance'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
-import { startOfMonth, subMonths } from 'date-fns'
+import { subMonths } from 'date-fns'
 import { formatMonthYear } from '@/lib/dates'
 import ProgressBar from '@/components/ui/ProgressBar'
 
@@ -75,7 +75,7 @@ export default function InsightsPage() {
             <Tooltip
               contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }}
               labelStyle={{ color: '#94a3b8' }}
-              formatter={(v: number) => formatCurrency(v)}
+              formatter={(v) => formatCurrency(v as number)}
             />
             <Line type="monotone" dataKey="entrate" stroke="#10b981" strokeWidth={2} dot={false} name="Entrate" />
             <Line type="monotone" dataKey="uscite" stroke="#ef4444" strokeWidth={2} dot={false} name="Uscite" />

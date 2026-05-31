@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 import type { MascotMood } from './mascotPersonality'
 
 interface Props {
@@ -48,14 +48,14 @@ export default function MascotSVG({ mood, size = 96, animate = true }: Props) {
   const colors = moodColors[mood]
   const expr = expressions[mood]
 
-  const floatVariants = {
+  const floatVariants: Variants = {
     animate: {
       y: [0, -6, 0],
-      transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
+      transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' as const },
     },
   }
 
-  const bounceVariants = {
+  const bounceVariants: Variants = {
     animate: {
       scale: [1, 1.08, 1],
       transition: { duration: 0.6, repeat: Infinity, repeatDelay: 2 },
@@ -64,7 +64,7 @@ export default function MascotSVG({ mood, size = 96, animate = true }: Props) {
 
   return (
     <motion.div
-      variants={animate ? (mood === 'excited' ? bounceVariants : floatVariants) : {}}
+      variants={animate ? (mood === 'excited' ? bounceVariants : floatVariants) : undefined}
       animate={animate ? 'animate' : undefined}
       style={{ width: size, height: size, display: 'inline-block' }}
     >

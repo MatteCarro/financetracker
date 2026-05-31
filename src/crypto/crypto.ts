@@ -12,12 +12,12 @@ function buf2hex(buf: ArrayBuffer): string {
     .join('')
 }
 
-function hex2buf(hex: string): Uint8Array {
+function hex2buf(hex: string): ArrayBuffer {
   const bytes = new Uint8Array(hex.length / 2)
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16)
   }
-  return bytes
+  return bytes.buffer as ArrayBuffer
 }
 
 async function importKeyMaterial(pin: string): Promise<CryptoKey> {
@@ -28,7 +28,7 @@ async function importKeyMaterial(pin: string): Promise<CryptoKey> {
   ])
 }
 
-async function deriveKey(keyMaterial: CryptoKey, salt: Uint8Array): Promise<CryptoKey> {
+async function deriveKey(keyMaterial: CryptoKey, salt: ArrayBuffer): Promise<CryptoKey> {
   return crypto.subtle.deriveKey(
     { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
     keyMaterial,
@@ -39,18 +39,21 @@ async function deriveKey(keyMaterial: CryptoKey, salt: Uint8Array): Promise<Cryp
 }
 
 export async function hashPin(pin: string): Promise<{ hash: string; salt: string }> {
-  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH))
+  const saltBuf = crypto.getRandomValues(new Uint8Array(SALT_LENGTH)).buffer as ArrayBuffer
   const keyMaterial = await importKeyMaterial(pin)
-  // Derive bits to use as the verifier hash
   const derived = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: saltBuf, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
     keyMaterial,
     256
   )
-  return { hash: buf2hex(derived), salt: buf2hex(salt) }
+  return { hash: buf2hex(derived), salt: buf2hex(saltBuf) }
 }
 
-export async function verifyPin(pin: string, storedHash: string, storedSalt: string): Promise<boolean> {
+export async function verifyPin(
+  pin: string,
+  storedHash: string,
+  storedSalt: string
+): Promise<boolean> {
   const salt = hex2buf(storedSalt)
   const keyMaterial = await importKeyMaterial(pin)
   const derived = await crypto.subtle.deriveBits(
@@ -69,15 +72,10 @@ export async function deriveEncryptionKey(pin: string, salt: string): Promise<Cr
 }
 
 export async function encrypt(key: CryptoKey, plaintext: string): Promise<string> {
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH))
+  const ivBuf = crypto.getRandomValues(new Uint8Array(IV_LENGTH)).buffer as ArrayBuffer
   const enc = new TextEncoder()
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    enc.encode(plaintext)
-  )
-  // Encode as: hex(iv) + ":" + hex(ciphertext)
-  return buf2hex(iv) + ':' + buf2hex(ciphertext)
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: ivBuf }, key, enc.encode(plaintext))
+  return buf2hex(ivBuf) + ':' + buf2hex(ciphertext)
 }
 
 export async function decrypt(key: CryptoKey, encoded: string): Promise<string> {
@@ -89,5 +87,5 @@ export async function decrypt(key: CryptoKey, encoded: string): Promise<string> 
 }
 
 export function generateSalt(): string {
-  return buf2hex(crypto.getRandomValues(new Uint8Array(SALT_LENGTH)))
+  return buf2hex(crypto.getRandomValues(new Uint8Array(SALT_LENGTH)).buffer as ArrayBuffer)
 }
