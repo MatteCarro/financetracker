@@ -1,12 +1,11 @@
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
-import { useSettingsStore } from '@/store/settingsStore'
-import { seedDatabase } from '@/db/seed'
 import TabBar from '@/components/layout/TabBar'
 import type { TabId } from './tabs'
 import PinSetup from '@/features/settings/PinSetup'
 import LockScreen from '@/features/settings/LockScreen'
+import ProfileSelect from '@/features/profiles/ProfileSelect'
 
 const DashboardPage = lazy(() => import('@/features/home/DashboardPage'))
 const TransactionsPage = lazy(() => import('@/features/transactions/TransactionsPage'))
@@ -30,21 +29,22 @@ const PAGE_VARIANTS = {
 
 export default function App() {
   const [tab, setTab] = useState<TabId>('home')
-  const { status, initAuth, checkTimeout } = useAuthStore()
-  const { load: loadSettings } = useSettingsStore()
+  const status = useAuthStore((s) => s.status)
+  const activeProfileId = useAuthStore((s) => s.activeProfileId)
+  const init = useAuthStore((s) => s.init)
+  const checkTimeout = useAuthStore((s) => s.checkTimeout)
 
   useEffect(() => {
-    const init = async () => {
-      if (navigator.storage?.persist) {
-        navigator.storage.persist().catch(() => {})
-      }
-      // Seed must complete before initAuth reads pinHash
-      await seedDatabase()
-      await initAuth()
-      loadSettings()
+    if (navigator.storage?.persist) {
+      navigator.storage.persist().catch(() => {})
     }
     init()
-  }, [initAuth, loadSettings])
+  }, [init])
+
+  // Reset to Home tab whenever a different profile becomes active.
+  useEffect(() => {
+    setTab('home')
+  }, [activeProfileId])
 
   // Lock timeout on visibility change
   useEffect(() => {
@@ -63,11 +63,19 @@ export default function App() {
     return () => events.forEach((e) => document.removeEventListener(e, reset))
   }, [])
 
-  if (status === 'uninitialized') return <PinSetup />
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-full bg-gradient-radial-primary">
+        <div className="w-8 h-8 border-2 border-[var(--color-primary)]/30 border-t-[var(--color-primary)] rounded-full animate-spin" />
+      </div>
+    )
+  }
+  if (status === 'profile-select') return <ProfileSelect />
+  if (status === 'setup') return <PinSetup />
   if (status === 'locked') return <LockScreen />
 
   return (
-    <div className="flex flex-col h-full bg-gradient-radial-primary">
+    <div key={activeProfileId} className="flex flex-col h-full bg-gradient-radial-primary">
       {/* Status bar spacer */}
       <div style={{ height: 'env(safe-area-inset-top)' }} />
 

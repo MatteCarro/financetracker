@@ -12,6 +12,8 @@ export default function PinSetup() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const setupPin = useAuthStore((s) => s.setupPin)
+  const activeProfileName = useAuthStore((s) => s.activeProfileName)
+  const switchProfile = useAuthStore((s) => s.switchProfile)
 
   const current = step === 'enter' ? pin : confirmPin
   const setter = step === 'enter' ? setPin : setConfirmPin
@@ -65,6 +67,11 @@ export default function PinSetup() {
         <MascotSVG mood="happy" size={100} />
 
         <div className="text-center">
+          {activeProfileName && (
+            <p className="text-sm font-semibold text-[var(--color-primary)] mb-1">
+              👋 Ciao {activeProfileName}
+            </p>
+          )}
           <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
             {step === 'enter' ? 'Crea il tuo PIN' : 'Conferma il PIN'}
           </h1>
@@ -124,6 +131,13 @@ export default function PinSetup() {
             </motion.button>
           ))}
         </div>
+
+        <button
+          onClick={switchProfile}
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          ← Cambia profilo
+        </button>
       </motion.div>
     </div>
   )

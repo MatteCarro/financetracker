@@ -11,6 +11,8 @@ export default function LockScreen() {
   const [loading, setLoading] = useState(false)
   const [shake, setShake] = useState(false)
   const unlock = useAuthStore((s) => s.unlock)
+  const activeProfileName = useAuthStore((s) => s.activeProfileName)
+  const switchProfile = useAuthStore((s) => s.switchProfile)
 
   const handleDigit = (d: string) => {
     if (d === '⌫') { setPin((p) => p.slice(0, -1)); setError(''); return }
@@ -50,6 +52,11 @@ export default function LockScreen() {
         </motion.div>
 
         <div className="text-center">
+          {activeProfileName && (
+            <p className="text-sm font-semibold text-[var(--color-primary)] mb-1">
+              👋 Ciao {activeProfileName}
+            </p>
+          )}
           <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Inserisci il PIN</h1>
           <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             I tuoi dati sono al sicuro
@@ -102,6 +109,13 @@ export default function LockScreen() {
             </motion.button>
           ))}
         </div>
+
+        <button
+          onClick={switchProfile}
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          ← Cambia profilo
+        </button>
       </motion.div>
     </div>
   )

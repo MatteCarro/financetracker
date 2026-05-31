@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/schema'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useAuthStore } from '@/store/authStore'
+import { coreDb, getProfile } from '@/db/profiles'
 import type { Theme } from '@/lib/types'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -90,8 +90,10 @@ function ImportBackup() {
 
 export default function SettingsPage() {
   const { settings, update } = useSettingsStore()
-  const { lock } = useAuthStore()
-  const dbSettings = useLiveQuery(() => db.settings.get('singleton'), [])
+  const lock = useAuthStore((s) => s.lock)
+  const switchProfile = useAuthStore((s) => s.switchProfile)
+  const activeProfileId = useAuthStore((s) => s.activeProfileId)
+  const activeProfileName = useAuthStore((s) => s.activeProfileName)
 
   const [showChangePIN, setShowChangePIN] = useState(false)
   const [oldPin, setOldPin] = useState('')
@@ -102,14 +104,21 @@ export default function SettingsPage() {
   const handleTheme = (tema: Theme) => update({ tema })
 
   const handleChangePIN = async () => {
-    if (!dbSettings?.pinHash || !dbSettings.pinSalt) return
-    const valid = await verifyPin(oldPin, dbSettings.pinHash, dbSettings.pinSalt)
+    if (!activeProfileId) return
+    const profile = await getProfile(activeProfileId)
+    if (!profile?.pinHash || !profile.pinSalt) return
+    const valid = await verifyPin(oldPin, profile.pinHash, profile.pinSalt)
     if (!valid) { setPinError('PIN attuale errato'); return }
     if (newPin !== confirmPin) { setPinError('I nuovi PIN non corrispondono'); return }
     if (newPin.length < 4) { setPinError('Il PIN deve avere almeno 4 cifre'); return }
     const { hash, salt } = await hashPin(newPin)
     const key = await deriveEncryptionKey(newPin, salt)
-    await db.settings.update('singleton', { pinHash: hash, pinSalt: salt, updatedAt: new Date() })
+    await coreDb.profiles.update(activeProfileId, {
+      pinHash: hash,
+      pinSalt: salt,
+      pinIterations: 310_000,
+      updatedAt: new Date(),
+    })
     useAuthStore.setState({ encryptionKey: key })
     setShowChangePIN(false)
     setOldPin(''); setNewPin(''); setConfirmPin(''); setPinError('')
@@ -157,6 +166,19 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
+      </Card>
+
+      {/* Profile */}
+      <Card className="!p-4">
+        <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3">Profilo</p>
+        {activeProfileName && (
+          <p className="text-sm text-[var(--color-text-primary)] mb-3">
+            Stai usando il profilo di <strong>{activeProfileName}</strong>.
+          </p>
+        )}
+        <Button variant="secondary" fullWidth onClick={switchProfile}>
+          👥 Cambia profilo
+        </Button>
       </Card>
 
       {/* Security */}

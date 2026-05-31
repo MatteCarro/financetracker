@@ -24,8 +24,8 @@ export class FinanceDB extends Dexie {
   savingsGoals!: EntityTable<SavingsGoal, 'id'>
   settings!: EntityTable<Settings, 'id'>
 
-  constructor() {
-    super('FinanceTrackerDB')
+  constructor(dbName: string) {
+    super(dbName)
     this.version(1).stores({
       accounts: 'id, tipo, createdAt',
       categories: 'id, nome, createdAt',
@@ -48,4 +48,14 @@ export class FinanceDB extends Dexie {
   }
 }
 
-export const db = new FinanceDB()
+// `db` is a live binding: it points to the active profile's database. ESM
+// live bindings mean every `import { db }` sees the current instance. Feature
+// components read `db.<table>` at call time, so they always hit the right DB.
+// Profile selection happens before the main app mounts, so this is safe.
+export let db: FinanceDB = new FinanceDB('FinanceTrackerDB')
+
+// Open (and switch to) a specific profile's database.
+export function openProfileDb(profileId: string): FinanceDB {
+  db = new FinanceDB(`FinanceTrackerDB_p_${profileId}`)
+  return db
+}

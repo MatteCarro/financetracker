@@ -1,72 +1,101 @@
 import { create } from 'zustand'
 import { deriveEncryptionKey, hashPin, verifyPin } from '@/crypto/crypto'
-import { db } from '@/db/schema'
+import { db, openProfileDb } from '@/db/schema'
+import { coreDb, getProfile, seedProfiles } from '@/db/profiles'
+import { seedDatabase } from '@/db/seed'
+import { useSettingsStore } from '@/store/settingsStore'
 
-type AuthStatus = 'uninitialized' | 'locked' | 'unlocked'
+type AuthStatus = 'loading' | 'profile-select' | 'setup' | 'locked' | 'unlocked'
 
 interface AuthState {
   status: AuthStatus
+  activeProfileId: string | null
+  activeProfileName: string | null
   encryptionKey: CryptoKey | null
   lastActivity: number
-  initAuth: () => Promise<void>
+  // Actions
+  init: () => Promise<void>
+  selectProfile: (id: string) => Promise<void>
   setupPin: (pin: string) => Promise<void>
   unlock: (pin: string) => Promise<boolean>
   lock: () => void
+  switchProfile: () => void
   resetActivity: () => void
   checkTimeout: () => void
 }
 
+const PBKDF2_ITERATIONS = 310_000
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  status: 'uninitialized',
+  status: 'loading',
+  activeProfileId: null,
+  activeProfileName: null,
   encryptionKey: null,
   lastActivity: Date.now(),
 
-  initAuth: async () => {
-    const settings = await db.settings.get('singleton')
-    if (!settings?.pinHash) {
-      set({ status: 'uninitialized' })
-    } else {
-      set({ status: 'locked' })
-    }
+  init: async () => {
+    await seedProfiles()
+    set({ status: 'profile-select', activeProfileId: null, activeProfileName: null, encryptionKey: null })
+  },
+
+  // Choose a profile → open its DB → decide whether to set up or unlock.
+  selectProfile: async (id: string) => {
+    const profile = await getProfile(id)
+    if (!profile) return
+    openProfileDb(id)
+    set({
+      activeProfileId: id,
+      activeProfileName: profile.nome,
+      encryptionKey: null,
+      status: profile.pinHash ? 'locked' : 'setup',
+    })
   },
 
   setupPin: async (pin: string) => {
+    const { activeProfileId } = get()
+    if (!activeProfileId) return
     const { hash, salt } = await hashPin(pin)
     const key = await deriveEncryptionKey(pin, salt)
-
-    // Use put (upsert) so it works even if the seeded record doesn't exist yet
-    const existing = await db.settings.get('singleton')
-    const now = new Date()
-    await db.settings.put({
-      id: 'singleton',
-      lockTimeoutMinutes: 5,
-      notificheAbilitate: false,
-      valuta: 'EUR',
-      tema: 'dark',
-      mascotteName: 'Soldino',
-      biometricEnabled: false,
-      ...existing,
+    await coreDb.profiles.update(activeProfileId, {
       pinHash: hash,
       pinSalt: salt,
-      pinIterations: 310_000,
-      createdAt: existing?.createdAt ?? now,
-      updatedAt: now,
+      pinIterations: PBKDF2_ITERATIONS,
+      updatedAt: new Date(),
     })
+    // Seed this profile's database (categories + settings) on first entry.
+    await seedDatabase()
+    await useSettingsStore.getState().load()
     set({ status: 'unlocked', encryptionKey: key, lastActivity: Date.now() })
   },
 
   unlock: async (pin: string) => {
-    const settings = await db.settings.get('singleton')
-    if (!settings?.pinHash || !settings?.pinSalt) return false
-    const valid = await verifyPin(pin, settings.pinHash, settings.pinSalt)
+    const { activeProfileId } = get()
+    if (!activeProfileId) return false
+    const profile = await getProfile(activeProfileId)
+    if (!profile?.pinHash || !profile?.pinSalt) return false
+    const valid = await verifyPin(pin, profile.pinHash, profile.pinSalt)
     if (!valid) return false
-    const key = await deriveEncryptionKey(pin, settings.pinSalt)
+    const key = await deriveEncryptionKey(pin, profile.pinSalt)
+    // Ensure data is seeded (no-op if already present).
+    await seedDatabase()
+    await useSettingsStore.getState().load()
     set({ status: 'unlocked', encryptionKey: key, lastActivity: Date.now() })
     return true
   },
 
+  // Lock the current profile (keeps it selected, asks for PIN again).
   lock: () => {
     set({ status: 'locked', encryptionKey: null })
+  },
+
+  // Go back to the profile picker.
+  switchProfile: () => {
+    set({
+      status: 'profile-select',
+      encryptionKey: null,
+      activeProfileId: null,
+      activeProfileName: null,
+    })
   },
 
   resetActivity: () => {
