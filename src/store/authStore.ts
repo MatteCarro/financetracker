@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { deriveEncryptionKey, hashPin, verifyPin } from '@/crypto/crypto'
 import { db, openProfileDb } from '@/db/schema'
-import { coreDb, getProfile, seedProfiles } from '@/db/profiles'
+import { coreDb, getProfile, resetProfilePin, seedProfiles } from '@/db/profiles'
 import { seedDatabase } from '@/db/seed'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useSyncStore } from '@/store/syncStore'
@@ -19,6 +19,7 @@ interface AuthState {
   selectProfile: (id: string) => Promise<void>
   setupPin: (pin: string) => Promise<void>
   unlock: (pin: string) => Promise<boolean>
+  resetActivePin: () => Promise<void>
   lock: () => void
   switchProfile: () => void
   resetActivity: () => void
@@ -84,6 +85,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: 'unlocked', encryptionKey: key, lastActivity: Date.now() })
     void useSyncStore.getState().syncNow()
     return true
+  },
+
+  // Forgot PIN: clear the active profile's PIN (data is preserved) and send the
+  // user to the create-PIN screen.
+  resetActivePin: async () => {
+    const { activeProfileId } = get()
+    if (!activeProfileId) return
+    await resetProfilePin(activeProfileId)
+    set({ status: 'setup', encryptionKey: null })
   },
 
   // Lock the current profile (keeps it selected, asks for PIN again).

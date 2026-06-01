@@ -13,6 +13,16 @@ export default function LockScreen() {
   const unlock = useAuthStore((s) => s.unlock)
   const activeProfileName = useAuthStore((s) => s.activeProfileName)
   const switchProfile = useAuthStore((s) => s.switchProfile)
+  const resetActivePin = useAuthStore((s) => s.resetActivePin)
+
+  const handleForgotPin = () => {
+    const ok = confirm(
+      `Reimpostare il PIN di ${activeProfileName ?? 'questo profilo'}?\n\n` +
+        'I tuoi dati (conti, movimenti, ecc.) NON verranno cancellati: ' +
+        'dovrai solo scegliere un nuovo PIN.'
+    )
+    if (ok) resetActivePin()
+  }
 
   const handleDigit = (d: string) => {
     if (d === '⌫') { setPin((p) => p.slice(0, -1)); setError(''); return }
@@ -110,12 +120,20 @@ export default function LockScreen() {
           ))}
         </div>
 
-        <button
-          onClick={switchProfile}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-        >
-          ← Cambia profilo
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={handleForgotPin}
+            className="text-sm text-[var(--color-primary)] hover:underline transition-colors"
+          >
+            PIN dimenticato?
+          </button>
+          <button
+            onClick={switchProfile}
+            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+          >
+            ← Cambia profilo
+          </button>
+        </div>
       </motion.div>
     </div>
   )

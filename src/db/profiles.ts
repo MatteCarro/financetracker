@@ -43,6 +43,17 @@ export async function seedProfiles(): Promise<void> {
   }
 }
 
+// Clear a single profile's PIN (forgot-PIN flow). Data is NOT touched — the PIN
+// only gates access, it doesn't encrypt the per-profile database.
+export async function resetProfilePin(id: string): Promise<void> {
+  await coreDb.profiles.update(id, {
+    pinHash: undefined,
+    pinSalt: undefined,
+    pinIterations: undefined,
+    updatedAt: new Date(),
+  })
+}
+
 // Clear every profile's PIN — forces each profile to set a new one on next login.
 export async function resetAllPins(): Promise<void> {
   const all = await coreDb.profiles.toArray()
