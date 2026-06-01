@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
-import { db } from '@/db/schema'
+import { db, removeRecord } from '@/db/schema'
 import type { Transaction, TransactionType, PaymentMethod } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
 import { formatDate } from '@/lib/dates'
@@ -169,7 +169,7 @@ export default function TransactionsPage() {
 
   const deleteTransaction = async (tx: Transaction) => {
     if (!confirm('Eliminare questo movimento?')) return
-    await db.transactions.delete(tx.id)
+    await removeRecord('transactions', tx.id)
     // Reverse balance update
     if (tx.metodo === 'carta' && tx.tipo === 'uscita') {
       const card = await db.creditCards.get(tx.fonteId)

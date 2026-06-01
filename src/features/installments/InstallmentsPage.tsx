@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
-import { db } from '@/db/schema'
+import { db, removeRecord } from '@/db/schema'
 import type { Installment } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
 import { monthlyInstallmentCost } from '@/lib/finance'
@@ -146,7 +146,7 @@ export default function InstallmentsPage() {
                       <Button size="sm" variant="secondary" onClick={() => markPaid(inst)}>✓ Segna pagata</Button>
                     )}
                     <Button size="sm" variant="secondary" onClick={() => { setEditItem(inst); setShowModal(true) }}>✏️</Button>
-                    <Button size="sm" variant="danger" onClick={() => confirm('Eliminare?') && db.installments.delete(inst.id)}>🗑</Button>
+                    <Button size="sm" variant="danger" onClick={() => confirm('Eliminare?') && removeRecord('installments', inst.id)}>🗑</Button>
                   </div>
                   {done && <p className="text-xs text-[var(--color-accent)] mt-2 font-semibold">✓ Completata!</p>}
                 </Card>

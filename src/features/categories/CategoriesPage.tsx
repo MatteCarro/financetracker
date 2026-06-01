@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
-import { db } from '@/db/schema'
+import { db, removeRecord } from '@/db/schema'
 import type { Category, CategoryType } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
 import { categorySpend } from '@/lib/finance'
@@ -168,7 +168,7 @@ export default function CategoriesPage() {
       alert('Questa categoria è usata da alcuni movimenti e non può essere eliminata.')
       return
     }
-    if (confirm(`Eliminare la categoria "${cat.nome}"?`)) await db.categories.delete(cat.id)
+    if (confirm(`Eliminare la categoria "${cat.nome}"?`)) await removeRecord('categories', cat.id)
   }
 
   // Group by tipo

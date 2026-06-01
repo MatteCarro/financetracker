@@ -140,8 +140,19 @@ export interface Settings {
   tema: Theme
   mascotteName: string
   biometricEnabled: boolean
+  // Cloud sync (per profile, per device)
+  syncEnabled?: boolean
+  syncPassphrase?: string
   createdAt: Date
   updatedAt: Date
+}
+
+// Tombstone: records a deletion so it can propagate during cloud sync.
+export interface Tombstone {
+  id: string // `${table}:${recordId}`
+  table: string
+  recordId: string
+  deletedAt: number
 }
 
 // ── Derived / computed types ──────────────────────────────────────────────────

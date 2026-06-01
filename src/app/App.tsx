@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
+import { useSyncStore } from '@/store/syncStore'
 import TabBar from '@/components/layout/TabBar'
 import type { TabId } from './tabs'
 import PinSetup from '@/features/settings/PinSetup'
@@ -54,6 +55,23 @@ export default function App() {
     document.addEventListener('visibilitychange', handler)
     return () => document.removeEventListener('visibilitychange', handler)
   }, [checkTimeout])
+
+  // Cloud sync triggers while unlocked: periodic + on focus/visibility.
+  useEffect(() => {
+    if (status !== 'unlocked') return
+    const sync = () => useSyncStore.getState().syncNow()
+    const interval = setInterval(sync, 20_000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') sync()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', sync)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', sync)
+    }
+  }, [status])
 
   // Activity tracking
   useEffect(() => {

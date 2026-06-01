@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
-import { db } from '@/db/schema'
+import { db, removeRecord } from '@/db/schema'
 import type { Debt } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
 import { formatDate } from '@/lib/dates'
@@ -119,7 +119,7 @@ export default function DebtsPage() {
                   )}
                   <div className="flex gap-2 mt-3">
                     <Button size="sm" variant="secondary" onClick={() => { setEditDebt(debt); setShowModal(true) }}>✏️</Button>
-                    <Button size="sm" variant="danger" onClick={() => confirm('Eliminare?') && db.debts.delete(debt.id)}>🗑</Button>
+                    <Button size="sm" variant="danger" onClick={() => confirm('Eliminare?') && removeRecord('debts', debt.id)}>🗑</Button>
                   </div>
                 </Card>
               </motion.div>

@@ -4,6 +4,7 @@ import { db, openProfileDb } from '@/db/schema'
 import { coreDb, getProfile, seedProfiles } from '@/db/profiles'
 import { seedDatabase } from '@/db/seed'
 import { useSettingsStore } from '@/store/settingsStore'
+import { useSyncStore } from '@/store/syncStore'
 
 type AuthStatus = 'loading' | 'profile-select' | 'setup' | 'locked' | 'unlocked'
 
@@ -66,6 +67,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await seedDatabase()
     await useSettingsStore.getState().load()
     set({ status: 'unlocked', encryptionKey: key, lastActivity: Date.now() })
+    void useSyncStore.getState().syncNow()
   },
 
   unlock: async (pin: string) => {
@@ -80,6 +82,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await seedDatabase()
     await useSettingsStore.getState().load()
     set({ status: 'unlocked', encryptionKey: key, lastActivity: Date.now() })
+    void useSyncStore.getState().syncNow()
     return true
   },
 

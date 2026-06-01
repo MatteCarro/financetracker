@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
-import { db } from '@/db/schema'
+import { db, removeRecord } from '@/db/schema'
 import type { Account, AccountType, CreditCard } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
 import { cardUsagePercent, cardAvailableCredit } from '@/lib/finance'
@@ -168,10 +168,10 @@ export default function AccountsPage() {
   }
 
   const deleteAccount = async (id: string) => {
-    if (confirm('Eliminare questo conto?')) await db.accounts.delete(id)
+    if (confirm('Eliminare questo conto?')) await removeRecord('accounts', id)
   }
   const deleteCard = async (id: string) => {
-    if (confirm('Eliminare questa carta?')) await db.creditCards.delete(id)
+    if (confirm('Eliminare questa carta?')) await removeRecord('creditCards', id)
   }
 
   return (

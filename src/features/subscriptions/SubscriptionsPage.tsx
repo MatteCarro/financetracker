@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
-import { db } from '@/db/schema'
+import { db, removeRecord } from '@/db/schema'
 import type { Subscription, Frequency } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
 import { formatDate } from '@/lib/dates'
@@ -151,7 +151,7 @@ export default function SubscriptionsPage() {
                   <div className="flex items-center gap-2">
                     <p className="font-bold font-numeric text-[var(--color-danger)]">{formatCurrency(sub.importo)}</p>
                     <button onClick={() => { setEditSub(sub); setShowModal(true) }} className="text-[var(--color-text-muted)] p-1 text-sm">✏️</button>
-                    <button onClick={() => confirm('Eliminare?') && db.subscriptions.delete(sub.id)} className="text-[var(--color-danger)] p-1 text-sm">🗑</button>
+                    <button onClick={() => confirm('Eliminare?') && removeRecord('subscriptions', sub.id)} className="text-[var(--color-danger)] p-1 text-sm">🗑</button>
                   </div>
                 </div>
               </Card>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
-import { db } from '@/db/schema'
+import { db, removeRecord } from '@/db/schema'
 import type { SavingsGoal } from '@/lib/types'
 import { formatCurrency } from '@/lib/currency'
 import { formatDate, monthsUntil } from '@/lib/dates'
@@ -172,7 +172,7 @@ export default function SavingsGoalsPage() {
                       }}>+ Aggiungi</Button>
                     )}
                     <Button size="sm" variant="secondary" onClick={() => { setEditGoal(goal); setShowModal(true) }}>✏️</Button>
-                    <Button size="sm" variant="danger" onClick={() => confirm('Eliminare?') && db.savingsGoals.delete(goal.id)}>🗑</Button>
+                    <Button size="sm" variant="danger" onClick={() => confirm('Eliminare?') && removeRecord('savingsGoals', goal.id)}>🗑</Button>
                   </div>
                 </Card>
               </motion.div>

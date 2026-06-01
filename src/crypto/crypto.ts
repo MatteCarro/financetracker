@@ -89,3 +89,33 @@ export async function decrypt(key: CryptoKey, encoded: string): Promise<string> 
 export function generateSalt(): string {
   return buf2hex(crypto.getRandomValues(new Uint8Array(SALT_LENGTH)).buffer as ArrayBuffer)
 }
+
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return buf2hex(digest)
+}
+
+// Derive deterministic sync material from a shared passphrase.
+// Both devices entering the same passphrase get the same groupId + key, so they
+// land in the same cloud partition and can decrypt each other's data (E2E).
+// The cloud only ever sees an opaque groupId hash and AES-GCM ciphertext.
+export async function deriveSyncMaterial(
+  passphrase: string
+): Promise<{ groupId: string; key: CryptoKey }> {
+  const groupId = await sha256Hex('ft-sync-group:' + passphrase)
+  const saltHex = await sha256Hex('ft-sync-salt:' + passphrase)
+  const salt = hex2buf(saltHex.slice(0, SALT_LENGTH * 2))
+  const enc = new TextEncoder()
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, [
+    'deriveKey',
+  ])
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: KEY_LENGTH },
+    false,
+    ['encrypt', 'decrypt']
+  )
+  return { groupId, key }
+}

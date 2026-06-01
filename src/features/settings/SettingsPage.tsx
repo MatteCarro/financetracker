@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { db } from '@/db/schema'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useAuthStore } from '@/store/authStore'
+import { useSyncStore } from '@/store/syncStore'
 import { coreDb, getProfile } from '@/db/profiles'
 import type { Theme } from '@/lib/types'
 import Card from '@/components/ui/Card'
@@ -9,6 +10,78 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Modal from '@/components/ui/Modal'
 import { hashPin, verifyPin, deriveEncryptionKey } from '@/crypto/crypto'
+import { formatDatetime } from '@/lib/dates'
+
+function SyncCard() {
+  const { settings, update } = useSettingsStore()
+  const { configured, status, lastSyncAt, lastError, syncNow } = useSyncStore()
+  const [passphrase, setPassphrase] = useState(settings?.syncPassphrase ?? '')
+  const enabled = settings?.syncEnabled ?? false
+
+  if (!configured) {
+    return (
+      <Card className="!p-4">
+        <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Sincronizzazione cloud</p>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Non configurata su questo deploy. Aggiungi le variabili d'ambiente
+          <strong> VITE_SUPABASE_URL</strong> e <strong> VITE_SUPABASE_ANON_KEY</strong> su Vercel
+          per attivare il sync tra dispositivi (vedi SUPABASE.md).
+        </p>
+      </Card>
+    )
+  }
+
+  const toggle = async () => {
+    if (!enabled) {
+      if (passphrase.trim().length < 6) return
+      await update({ syncEnabled: true, syncPassphrase: passphrase.trim() })
+      await syncNow()
+    } else {
+      await update({ syncEnabled: false })
+    }
+  }
+
+  const statusLabel =
+    status === 'syncing' ? 'Sincronizzazione…'
+    : status === 'ok' ? 'Sincronizzato'
+    : status === 'error' ? `Errore: ${lastError}`
+    : 'In attesa'
+
+  return (
+    <Card className="!p-4">
+      <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3">Sincronizzazione cloud</p>
+
+      <Input
+        label="Passphrase di sincronizzazione"
+        value={passphrase}
+        onChange={(e) => setPassphrase(e.target.value)}
+        type="password"
+        placeholder="min. 6 caratteri"
+        icon="🔗"
+      />
+      <p className="text-xs text-[var(--color-text-muted)] mt-1 mb-3">
+        Usa la <strong>stessa passphrase</strong> su PC e iPhone per allineare i dati.
+        I dati vengono cifrati: nessuno (nemmeno il server) può leggerli senza la passphrase.
+      </p>
+
+      <Button onClick={toggle} fullWidth variant={enabled ? 'danger' : 'primary'}>
+        {enabled ? 'Disattiva sync' : 'Attiva sync'}
+      </Button>
+
+      {enabled && (
+        <div className="mt-3 flex flex-col gap-2">
+          <Button onClick={syncNow} variant="secondary" fullWidth disabled={status === 'syncing'}>
+            🔄 Sincronizza ora
+          </Button>
+          <p className="text-xs text-center text-[var(--color-text-muted)]">
+            {statusLabel}
+            {lastSyncAt ? ` · ultimo: ${formatDatetime(new Date(lastSyncAt))}` : ''}
+          </p>
+        </div>
+      )}
+    </Card>
+  )
+}
 
 function ExportBackup() {
   const [exporting, setExporting] = useState(false)
@@ -193,6 +266,9 @@ export default function SettingsPage() {
           </Button>
         </div>
       </Card>
+
+      {/* Cloud sync */}
+      <SyncCard />
 
       {/* Backup */}
       <Card className="!p-4">

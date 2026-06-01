@@ -9,8 +9,24 @@ import type {
   SavingsGoal,
   Settings,
   Subscription,
+  Tombstone,
   Transaction,
 } from '@/lib/types'
+
+// Tables that hold syncable financial records.
+export const SYNCED_TABLES = [
+  'accounts',
+  'categories',
+  'creditCards',
+  'transactions',
+  'subscriptions',
+  'installments',
+  'debts',
+  'income',
+  'savingsGoals',
+] as const
+
+export type SyncedTable = (typeof SYNCED_TABLES)[number]
 
 export class FinanceDB extends Dexie {
   accounts!: EntityTable<Account, 'id'>
@@ -23,6 +39,7 @@ export class FinanceDB extends Dexie {
   income!: EntityTable<Income, 'id'>
   savingsGoals!: EntityTable<SavingsGoal, 'id'>
   settings!: EntityTable<Settings, 'id'>
+  tombstones!: EntityTable<Tombstone, 'id'>
 
   constructor(dbName: string) {
     super(dbName)
@@ -45,6 +62,9 @@ export class FinanceDB extends Dexie {
         if (!cat.tipo) cat.tipo = 'uscita'
       })
     })
+    this.version(3).stores({
+      tombstones: 'id, table, deletedAt',
+    })
   }
 }
 
@@ -58,4 +78,18 @@ export let db: FinanceDB = new FinanceDB('FinanceTrackerDB')
 export function openProfileDb(profileId: string): FinanceDB {
   db = new FinanceDB(`FinanceTrackerDB_p_${profileId}`)
   return db
+}
+
+// Delete a record AND record a tombstone (so the deletion propagates via sync).
+// Use this everywhere instead of `db.<table>.delete(id)`.
+export async function removeRecord(table: SyncedTable, id: string): Promise<void> {
+  await db.transaction('rw', db.table(table), db.tombstones, async () => {
+    await db.table(table).delete(id)
+    await db.tombstones.put({
+      id: `${table}:${id}`,
+      table,
+      recordId: id,
+      deletedAt: Date.now(),
+    })
+  })
 }
