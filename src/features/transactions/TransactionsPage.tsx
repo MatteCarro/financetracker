@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { v4 as uuid } from 'uuid'
@@ -44,6 +44,23 @@ function TransactionForm({ onSave, onClose }: {
   }
 
   const fonti = metodo === 'conto' ? accounts : cards
+
+  // Auto-select the first available source (account/card) so the button isn't
+  // stuck disabled when the user doesn't tap a specific one.
+  useEffect(() => {
+    if (fonti.length > 0 && !fonti.some((f) => f.id === fonteId)) {
+      setFonteId(fonti[0].id)
+    } else if (fonti.length === 0 && fonteId) {
+      setFonteId('')
+    }
+  }, [fonti, fonteId])
+
+  // Auto-select the first category for the current type.
+  useEffect(() => {
+    if (filteredCats.length > 0 && !filteredCats.some((c) => c.id === categoriaId)) {
+      setCategoriaId(filteredCats[0].id)
+    }
+  }, [filteredCats, categoriaId])
 
   const handle = async () => {
     if (!importo || !fonteId) return
@@ -109,7 +126,7 @@ function TransactionForm({ onSave, onClose }: {
       </div>
 
       {/* Fonte */}
-      {fonti.length > 0 && (
+      {fonti.length > 0 ? (
         <div>
           <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-2 block">
             {metodo === 'conto' ? 'Conto' : 'Carta'}
@@ -123,10 +140,18 @@ function TransactionForm({ onSave, onClose }: {
             ))}
           </div>
         </div>
+      ) : (
+        <div className="glass-subtle rounded-xl p-3 text-center">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            {metodo === 'conto'
+              ? 'Non hai ancora un conto. Aggiungine uno in Finanze → Conti.'
+              : 'Non hai ancora una carta. Aggiungine una in Finanze → Conti.'}
+          </p>
+        </div>
       )}
 
       <Button onClick={handle} disabled={saving || !importo || !fonteId} fullWidth>
-        {saving ? 'Salvataggio...' : 'Aggiungi movimento'}
+        {saving ? 'Salvataggio...' : !fonteId ? 'Aggiungi prima un conto o una carta' : 'Aggiungi movimento'}
       </Button>
     </div>
   )
