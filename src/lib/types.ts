@@ -14,6 +14,12 @@ export interface Account {
   valuta: string
   icona: string
   colore: string
+  // Open Banking link (optional): set when the account is imported from a bank.
+  provider?: 'gocardless'
+  externalAccountId?: string
+  iban?: string
+  bankConnectionId?: string
+  lastSyncedAt?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -57,6 +63,8 @@ export interface Transaction {
   ricorrente: boolean
   frequenza?: Frequency
   note?: string
+  // Provider transaction id, used to de-duplicate imports from Open Banking.
+  externalId?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -143,6 +151,25 @@ export interface Settings {
   // Cloud sync (per profile, per device)
   syncEnabled?: boolean
   syncPassphrase?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Bank connection (Open Banking via GoCardless). Stored locally, per device:
+// the link itself doesn't sync, but the accounts/transactions it imports do.
+export type BankConnectionStatus = 'pending' | 'linked' | 'error'
+
+export interface BankConnection {
+  id: string // = reference passed to the provider (uuid)
+  provider: 'gocardless'
+  requisitionId: string
+  institutionId: string
+  institutionName: string
+  logo?: string
+  status: BankConnectionStatus
+  localAccountIds: string[]
+  lastSyncAt?: Date
+  error?: string
   createdAt: Date
   updatedAt: Date
 }

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/schema'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useAuthStore } from '@/store/authStore'
@@ -11,6 +12,14 @@ import Input from '@/components/ui/Input'
 import Modal from '@/components/ui/Modal'
 import { hashPin, verifyPin, deriveEncryptionKey } from '@/crypto/crypto'
 import { formatDatetime } from '@/lib/dates'
+import LinkAccountModal from './LinkAccountModal'
+import {
+  finalizeReturn,
+  hasPendingReturn,
+  isBankLinkingAvailable,
+  refreshConnection,
+  removeConnection,
+} from '@/lib/bankSync'
 
 function SyncCard() {
   const { settings, update } = useSettingsStore()
@@ -79,6 +88,139 @@ function SyncCard() {
           </p>
         </div>
       )}
+    </Card>
+  )
+}
+
+function BankCard() {
+  const available = isBankLinkingAvailable()
+  const connections = useLiveQuery(
+    () => db.bankConnections.orderBy('createdAt').toArray(),
+    []
+  ) ?? []
+
+  const [showModal, setShowModal] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [finalizing, setFinalizing] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+
+  // Handle the redirect back from the bank: import the freshly linked data.
+  useEffect(() => {
+    if (!hasPendingReturn()) return
+    setFinalizing(true)
+    setError('')
+    finalizeReturn()
+      .then((summary) => {
+        if (summary) {
+          setMessage(
+            `Collegamento riuscito: ${summary.accountsLinked} conto/i, ${summary.transactionsAdded} movimenti importati.`
+          )
+        }
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : 'Errore durante l\'importazione'))
+      .finally(() => setFinalizing(false))
+  }, [])
+
+  const handleRefresh = async (id: string) => {
+    setBusyId(id)
+    setError('')
+    setMessage('')
+    try {
+      const summary = await refreshConnection(id)
+      setMessage(`Aggiornato: ${summary.transactionsAdded} nuovi movimenti importati.`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore durante l\'aggiornamento')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleRemove = async (id: string) => {
+    if (!confirm('Scollegare questa banca? I conti e i movimenti già importati restano salvati.')) return
+    await removeConnection(id)
+  }
+
+  return (
+    <Card className="!p-4">
+      <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3">
+        Conti bancari (Open Banking)
+      </p>
+
+      {!available ? (
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Non configurato su questo deploy. Serve un backend (Supabase Edge Function) con le chiavi
+          GoCardless: vedi <strong>BANK_LINKING.md</strong>.
+        </p>
+      ) : (
+        <>
+          <p className="text-xs text-[var(--color-text-muted)] mb-3">
+            Collega la tua banca per importare automaticamente conti e movimenti (accesso in sola
+            lettura, tramite il login ufficiale della banca).
+          </p>
+
+          <Button onClick={() => { setMessage(''); setError(''); setShowModal(true) }} fullWidth>
+            🔗 Collega conto
+          </Button>
+
+          {finalizing && (
+            <p className="text-xs text-center text-[var(--color-text-muted)] mt-3">
+              Importazione dei dati dalla banca in corso…
+            </p>
+          )}
+          {message && <p className="text-xs text-[var(--color-accent)] mt-3">{message}</p>}
+          {error && <p className="text-xs text-[var(--color-danger)] mt-3">{error}</p>}
+
+          {connections.length > 0 && (
+            <div className="flex flex-col gap-2 mt-4">
+              {connections.map((conn) => (
+                <div key={conn.id} className="glass-subtle rounded-xl p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {conn.logo ? (
+                        <img src={conn.logo} alt="" className="w-7 h-7 rounded-md object-contain bg-white/80 p-0.5" />
+                      ) : (
+                        <span className="text-lg">🏦</span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                          {conn.institutionName}
+                        </p>
+                        <p className="text-xs text-[var(--color-text-muted)]">
+                          {conn.status === 'linked'
+                            ? `${conn.localAccountIds.length} conto/i${conn.lastSyncAt ? ` · ${formatDatetime(new Date(conn.lastSyncAt))}` : ''}`
+                            : conn.status === 'error'
+                            ? `Errore: ${conn.error ?? ''}`
+                            : 'In attesa di autorizzazione…'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleRefresh(conn.id)}
+                        disabled={busyId === conn.id}
+                        className="p-1.5 text-[var(--color-text-secondary)] disabled:opacity-40"
+                        aria-label="Sincronizza"
+                      >
+                        {busyId === conn.id ? '⏳' : '🔄'}
+                      </button>
+                      <button
+                        onClick={() => handleRemove(conn.id)}
+                        className="p-1.5 text-[var(--color-danger)]"
+                        aria-label="Scollega"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      <LinkAccountModal open={showModal} onClose={() => setShowModal(false)} />
     </Card>
   )
 }
@@ -266,6 +408,9 @@ export default function SettingsPage() {
           </Button>
         </div>
       </Card>
+
+      {/* Bank linking (Open Banking) */}
+      <BankCard />
 
       {/* Cloud sync */}
       <SyncCard />

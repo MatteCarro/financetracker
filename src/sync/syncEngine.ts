@@ -8,7 +8,7 @@ const TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000 // prune tombstones older than
 
 // Date fields to revive when a snapshot comes back from JSON.
 const DATE_FIELDS: Record<SyncedTable, string[]> = {
-  accounts: ['createdAt', 'updatedAt'],
+  accounts: ['createdAt', 'updatedAt', 'lastSyncedAt'],
   categories: ['createdAt', 'updatedAt'],
   creditCards: ['createdAt', 'updatedAt'],
   transactions: ['data', 'createdAt', 'updatedAt'],

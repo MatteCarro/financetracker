@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
   Account,
+  BankConnection,
   Category,
   CreditCard,
   Debt,
@@ -40,6 +41,7 @@ export class FinanceDB extends Dexie {
   savingsGoals!: EntityTable<SavingsGoal, 'id'>
   settings!: EntityTable<Settings, 'id'>
   tombstones!: EntityTable<Tombstone, 'id'>
+  bankConnections!: EntityTable<BankConnection, 'id'>
 
   constructor(dbName: string) {
     super(dbName)
@@ -64,6 +66,12 @@ export class FinanceDB extends Dexie {
     })
     this.version(3).stores({
       tombstones: 'id, table, deletedAt',
+    })
+    // v4: Open Banking. `externalId` index lets us de-duplicate imported
+    // transactions; `bankConnections` stores the link metadata (local only).
+    this.version(4).stores({
+      transactions: 'id, tipo, categoriaId, data, fonteId, metodo, createdAt, externalId',
+      bankConnections: 'id, status, createdAt',
     })
   }
 }

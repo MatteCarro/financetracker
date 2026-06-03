@@ -16,6 +16,8 @@ Un tracker finanziario personale **PWA installabile su iPhone**, completamente l
   - **Obiettivi di risparmio** — CRUD con barra avanzamento e calcolo importo mensile necessario
 - **Insights** — trend 6 mesi, spese per categoria, suggerimenti automatici di risparmio
 - **Mascotte "Soldino"** — salvadanaio SVG animato con umore reattivo alle finanze
+- **Collega conto (Open Banking)** — collega la tua banca via login ufficiale (PSD2,
+  sola lettura) e importa conti e movimenti in automatico — vedi [`BANK_LINKING.md`](./BANK_LINKING.md)
 - **Backup/Ripristino** — export/import JSON locale (nessun cloud)
 
 ## Sicurezza

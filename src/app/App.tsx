@@ -7,6 +7,7 @@ import type { TabId } from './tabs'
 import PinSetup from '@/features/settings/PinSetup'
 import LockScreen from '@/features/settings/LockScreen'
 import ProfileSelect from '@/features/profiles/ProfileSelect'
+import { hasPendingReturn } from '@/lib/bankSync'
 
 const DashboardPage = lazy(() => import('@/features/home/DashboardPage'))
 const TransactionsPage = lazy(() => import('@/features/transactions/TransactionsPage'))
@@ -42,9 +43,11 @@ export default function App() {
     init()
   }, [init])
 
-  // Reset to Home tab whenever a different profile becomes active.
+  // Reset to Home tab whenever a different profile becomes active. If the user
+  // is returning from a bank's Open Banking authorization, jump to Settings so
+  // they can see the import complete.
   useEffect(() => {
-    setTab('home')
+    setTab(hasPendingReturn() ? 'settings' : 'home')
   }, [activeProfileId])
 
   // Lock timeout on visibility change
